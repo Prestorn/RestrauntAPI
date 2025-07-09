@@ -10,7 +10,8 @@ import java.util.Optional
 
 @Service
 class OrderService(val orderRepository: OrderRepository,
-                   val clientRepository: ClientRepository) {
+                   val clientRepository: ClientRepository,
+                   val dishService: DishService) {
 
     fun findAllOrders() : List<Order> {
         return orderRepository.findAll()
@@ -29,6 +30,11 @@ class OrderService(val orderRepository: OrderRepository,
             throw IllegalStateException("Клиента с ID: $id не существует")
         }
         return orderRepository.findByClientId(id)
+    }
+
+    fun findOrdersWithDish(id: Int) : List<Order> {
+        dishService.findDishById(id)
+        return orderRepository.findAllOrdersWithDish(id)
     }
 
     fun createOrder(order: Order) : Order {
@@ -52,6 +58,8 @@ class OrderService(val orderRepository: OrderRepository,
         order.clientId = newClientId
         return orderRepository.save(order)
     }
+
+    //TODO fun changeCost
 
     fun deleteOrder(id: Int) : String {
         if (orderRepository.findById(id).isEmpty) {

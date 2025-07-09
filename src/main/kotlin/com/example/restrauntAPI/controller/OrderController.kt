@@ -31,6 +31,11 @@ class OrderController(val orderService: OrderService) {
         return orderService.findOrdersByClientId(id)
     }
 
+    @GetMapping(path = ["orders_with_dish/{id}"])
+    fun findOrdersWithDish(@PathVariable id: Int) : List<Order> {
+        return orderService.findOrdersWithDish(id)
+    }
+
     @PostMapping(path = ["new_order"])
     fun create(@RequestBody order: Order) : Order {
         return orderService.createOrder(order)
