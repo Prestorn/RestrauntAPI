@@ -1,6 +1,8 @@
 package com.example.restrauntAPI.service
 
+import com.example.restrauntAPI.model.Dish
 import com.example.restrauntAPI.model.DishInOrder
+import com.example.restrauntAPI.model.Order
 import com.example.restrauntAPI.repository.DishInOrderRepository
 import org.springframework.stereotype.Service
 import java.util.Optional
@@ -27,9 +29,16 @@ class DishInOrderService(val dishInOrderRepository: DishInOrderRepository,
     }
 
     fun createDishInOrder(dishInOrder: DishInOrder) : DishInOrder {
-        orderService.findOrderById(dishInOrder.orderId)
-        dishService.findDishById(dishInOrder.dishId)
+        val order: Order = orderService.findOrderById(dishInOrder.orderId)
+        val dish: Dish = dishService.findDishById(dishInOrder.dishId)
+        val optionalDishInOrder: Optional<DishInOrder> = dishInOrderRepository.findDataByOrderIdAndDishId(order.id, dish.id)
+
+        if (optionalDishInOrder.isPresent) {
+            return updateCount(optionalDishInOrder.get().id, optionalDishInOrder.get().count + 1)
+        }
+
         dishInOrder.count = 1
+        orderService.changeCost(order.id, dish.cost)
         return dishInOrderRepository.save(dishInOrder)
     }
 
@@ -39,13 +48,24 @@ class DishInOrderService(val dishInOrderRepository: DishInOrderRepository,
         }
 
         val dishInOrder: DishInOrder = findDishInOrderById(id)
+        val order: Order = orderService.findOrderById(dishInOrder.orderId)
+        val dish: Dish = dishService.findDishById(dishInOrder.dishId)
+
+        orderService.changeCost(order.id, dish.cost * (newCount - dishInOrder.count))
         dishInOrder.count = newCount
+
         return dishInOrderRepository.save(dishInOrder)
     }
 
     fun deleteDishInOrder(id: Int) : String {
-        findDishInOrderById(id)
+        val dishInOrder: DishInOrder = findDishInOrderById(id)
+        val order: Order = orderService.findOrderById(dishInOrder.orderId)
+        val dish: Dish = dishService.findDishById(dishInOrder.dishId)
+
+        orderService.changeCost(order.id, dish.cost * dishInOrder.count * -1)
         dishInOrderRepository.deleteById(id)
+
         return "Запись удалена"
     }
+
 }

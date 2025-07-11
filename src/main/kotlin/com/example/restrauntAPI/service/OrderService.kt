@@ -1,10 +1,8 @@
 package com.example.restrauntAPI.service
 
-import com.example.restrauntAPI.model.Client
 import com.example.restrauntAPI.model.Order
 import com.example.restrauntAPI.repository.ClientRepository
 import com.example.restrauntAPI.repository.OrderRepository
-import org.aspectj.weaver.ast.Or
 import org.springframework.stereotype.Service
 import java.util.Optional
 
@@ -60,6 +58,11 @@ class OrderService(val orderRepository: OrderRepository,
     }
 
     //TODO fun changeCost
+    fun changeCost(id: Int, delta: Int) : Order {
+        val order: Order = findOrderById(id)
+        order.cost += delta
+        return orderRepository.save(order)
+    }
 
     fun deleteOrder(id: Int) : String {
         if (orderRepository.findById(id).isEmpty) {
