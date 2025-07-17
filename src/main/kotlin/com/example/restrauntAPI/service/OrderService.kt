@@ -2,6 +2,7 @@ package com.example.restrauntAPI.service
 
 import com.example.restrauntAPI.model.Order
 import com.example.restrauntAPI.repository.ClientRepository
+import com.example.restrauntAPI.repository.DishRepository
 import com.example.restrauntAPI.repository.OrderRepository
 import org.springframework.stereotype.Service
 import java.util.Optional
@@ -9,7 +10,7 @@ import java.util.Optional
 @Service
 class OrderService(val orderRepository: OrderRepository,
                    val clientRepository: ClientRepository,
-                   val dishService: DishService) {
+                   val dishRepository: DishRepository) {
 
     fun findAllOrders() : List<Order> {
         return orderRepository.findAll()
@@ -17,9 +18,11 @@ class OrderService(val orderRepository: OrderRepository,
 
     fun findOrderById(id: Int) : Order {
         val optionalOrder: Optional<Order> = orderRepository.findById(id)
+
         if (optionalOrder.isEmpty) {
             throw IllegalStateException("Заказа с ID: $id не существует")
         }
+
         return optionalOrder.get()
     }
 
@@ -27,11 +30,15 @@ class OrderService(val orderRepository: OrderRepository,
         if (clientRepository.findById(id).isEmpty) {
             throw IllegalStateException("Клиента с ID: $id не существует")
         }
+
         return orderRepository.findByClientId(id)
     }
 
     fun findOrdersWithDish(id: Int) : List<Order> {
-        dishService.findDishById(id)
+        if (dishRepository.findById(id).isEmpty) {
+            throw IllegalStateException("Блюда с ID: $id не существует")
+        }
+
         return orderRepository.findAllOrdersWithDish(id)
     }
 
@@ -39,34 +46,24 @@ class OrderService(val orderRepository: OrderRepository,
         if (clientRepository.findById(order.clientId).isEmpty) {
             throw IllegalStateException("Клиента с ID: ${order.clientId} не существует")
         }
+
         return orderRepository.save(order)
     }
 
     fun changeClient(orderId: Int, newClientId: Int) : Order {
-        val optionalOrder: Optional<Order> = orderRepository.findById(orderId)
-        if (optionalOrder.isEmpty) {
-            throw IllegalStateException("Заказа с ID: $orderId не существует")
-        }
+        val order: Order = findOrderById(orderId)
 
         if (clientRepository.findById(newClientId).isEmpty) {
             throw IllegalStateException("Клиента с ID: $newClientId не существует")
         }
 
-        val order: Order = optionalOrder.get()
         order.clientId = newClientId
         return orderRepository.save(order)
     }
 
-    fun changeCost(id: Int, delta: Int) : Order {
-        val order: Order = findOrderById(id)
-        order.cost += delta
-        return orderRepository.save(order)
-    }
-
+    // TODO Каскадное удаление
     fun deleteOrder(id: Int) : String {
-        if (orderRepository.findById(id).isEmpty) {
-            throw IllegalStateException("Заказа с ID: $id не существует")
-        }
+        findOrderById(id)
         orderRepository.deleteById(id)
         return "Заказ с ID: $id удалён"
     }

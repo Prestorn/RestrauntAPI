@@ -4,33 +4,50 @@ import com.example.restrauntAPI.model.Dish
 import com.example.restrauntAPI.model.DishInOrder
 import com.example.restrauntAPI.model.Order
 import com.example.restrauntAPI.repository.DishInOrderRepository
+import com.example.restrauntAPI.repository.DishRepository
+import com.example.restrauntAPI.repository.OrderRepository
 import org.springframework.stereotype.Service
 import java.util.Optional
 
 @Service
 class DishInOrderService(val dishInOrderRepository: DishInOrderRepository,
-                        val orderService: OrderService,
-                        val dishService: DishService) {
+                         val orderRepository: OrderRepository,
+                         val dishRepository: DishRepository) {
     fun findAllDishesInOrders() : List<DishInOrder> {
         return dishInOrderRepository.findAll()
     }
 
     fun findAllDishesInOrder(id: Int) : List<DishInOrder> {
-        orderService.findOrderById(id)
+        if (orderRepository.findById(id).isEmpty) {
+            throw IllegalStateException("Заказа с ID: $id не существует")
+        }
+
         return dishInOrderRepository.findAllByOrderId(id)
     }
 
     fun findDishInOrderById(id: Int) : DishInOrder {
         val optionalDishInOrder: Optional<DishInOrder> = dishInOrderRepository.findById(id)
+
         if (optionalDishInOrder.isEmpty) {
             throw IllegalStateException("Записи с ID = $id не существует")
         }
+
         return optionalDishInOrder.get()
     }
 
     fun createDishInOrder(dishInOrder: DishInOrder) : DishInOrder {
-        val order: Order = orderService.findOrderById(dishInOrder.orderId)
-        val dish: Dish = dishService.findDishById(dishInOrder.dishId)
+        val optionalOrder: Optional<Order> = orderRepository.findById(dishInOrder.orderId)
+        val optionalDish: Optional<Dish> = dishRepository.findById(dishInOrder.dishId)
+
+        if (optionalOrder.isEmpty) {
+            throw IllegalStateException("Заказа с ID: ${dishInOrder.orderId} не существует")
+        }
+        if (optionalDish.isEmpty) {
+            throw IllegalStateException("Блюда с ID: ${dishInOrder.dishId} не существует")
+        }
+
+        val order: Order = optionalOrder.get()
+        val dish: Dish = optionalDish.get()
         val optionalDishInOrder: Optional<DishInOrder> = dishInOrderRepository.findDataByOrderIdAndDishId(order.id, dish.id)
 
         if (optionalDishInOrder.isPresent) {
@@ -38,31 +55,49 @@ class DishInOrderService(val dishInOrderRepository: DishInOrderRepository,
         }
 
         dishInOrder.count = 1
-        orderService.changeCost(order.id, dish.cost)
+        order.cost += dish.cost
+
+        orderRepository.save(order)
         return dishInOrderRepository.save(dishInOrder)
     }
 
     fun updateCount(id: Int, newCount: Int) : DishInOrder {
-        if (newCount < 1) {
-            throw IllegalStateException("Количество не может быть меньше 1")
+        val dishInOrder: DishInOrder = findDishInOrderById(id)
+        val optionalOrder: Optional<Order> = orderRepository.findById(dishInOrder.orderId)
+        val optionalDish: Optional<Dish> = dishRepository.findById(dishInOrder.dishId)
+
+        if (optionalOrder.isEmpty) {
+            throw IllegalStateException("Заказа с ID: ${dishInOrder.orderId} не существует")
+        }
+        if (optionalDish.isEmpty) {
+            throw IllegalStateException("Блюда с ID: ${dishInOrder.dishId} не существует")
         }
 
-        val dishInOrder: DishInOrder = findDishInOrderById(id)
-        val order: Order = orderService.findOrderById(dishInOrder.orderId)
-        val dish: Dish = dishService.findDishById(dishInOrder.dishId)
+        val order: Order = optionalOrder.get()
 
-        orderService.changeCost(order.id, dish.cost * (newCount - dishInOrder.count))
+        order.cost += optionalDish.get().cost * (newCount - dishInOrder.count)
         dishInOrder.count = newCount
 
+        orderRepository.save(order)
         return dishInOrderRepository.save(dishInOrder)
     }
 
     fun deleteDishInOrder(id: Int) : String {
         val dishInOrder: DishInOrder = findDishInOrderById(id)
-        val order: Order = orderService.findOrderById(dishInOrder.orderId)
-        val dish: Dish = dishService.findDishById(dishInOrder.dishId)
+        val optionalOrder: Optional<Order> = orderRepository.findById(dishInOrder.orderId)
+        val optionalDish: Optional<Dish> = dishRepository.findById(dishInOrder.dishId)
 
-        orderService.changeCost(order.id, dish.cost * dishInOrder.count * -1)
+        if (optionalOrder.isEmpty) {
+            throw IllegalStateException("Заказа с ID: ${dishInOrder.orderId} не существует")
+        }
+        if (optionalDish.isEmpty) {
+            throw IllegalStateException("Блюда с ID: ${dishInOrder.dishId} не существует")
+        }
+
+        val order: Order = optionalOrder.get()
+        order.cost -= optionalDish.get().cost * dishInOrder.count
+
+        orderRepository.save(order)
         dishInOrderRepository.deleteById(id)
 
         return "Запись $dishInOrder удалена"

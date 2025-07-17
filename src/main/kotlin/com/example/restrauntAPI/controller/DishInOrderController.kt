@@ -4,7 +4,6 @@ import com.example.restrauntAPI.model.DishInOrder
 import com.example.restrauntAPI.service.DishInOrderService
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.Mapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -39,6 +38,10 @@ class DishInOrderController(val dishInOrderService: DishInOrderService) {
 
     @PutMapping(path = ["update_dish_count"])
     fun update(@RequestParam id: Int, @RequestParam count: Int) : DishInOrder {
+        if (count < 1) {
+            throw IllegalStateException("Количество не может быть меньше 1")
+        }
+
         return dishInOrderService.updateCount(id, count)
     }
 

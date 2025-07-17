@@ -14,6 +14,7 @@ class ClientService(val clientRepository: ClientRepository) {
 
     fun findClientById(id: Int) : Client {
         val optionalClient : Optional<Client> = clientRepository.findById(id)
+
         if (optionalClient.isEmpty) {
             throw IllegalStateException("Клиента с ID: $id не существует")
         }
@@ -26,12 +27,8 @@ class ClientService(val clientRepository: ClientRepository) {
     }
 
     fun updateClient(id: Int, newFirstName: String?, newLastName: String?) : Client {
-        val optionalClient : Optional<Client> = clientRepository.findById(id)
-        if (optionalClient.isEmpty) {
-            throw IllegalStateException("Клиента с ID: $id не существует")
-        }
+        val client: Client = findClientById(id)
 
-        val client: Client = optionalClient.get()
         if (newFirstName != null) {
             client.firstName = newFirstName
         }
@@ -43,13 +40,11 @@ class ClientService(val clientRepository: ClientRepository) {
         return client
     }
 
+    // TODO Каскадное удаление
     fun deleteClient(id: Int) : String {
-        val optionalClient: Optional<Client> = clientRepository.findById(id)
-        if (optionalClient.isEmpty) {
-            throw IllegalStateException("Клиента с ID: $id не существует")
-        }
-
+        findClientById(id)
         clientRepository.deleteById(id)
+
         return "Клиент с ID: $id удалён"
     }
 }
