@@ -65,7 +65,7 @@ class DishInOrderService(val dishInOrderRepository: DishInOrderRepository,
         orderService.changeCost(order.id, dish.cost * dishInOrder.count * -1)
         dishInOrderRepository.deleteById(id)
 
-        return "Запись удалена"
+        return "Запись $dishInOrder удалена"
     }
 
 }

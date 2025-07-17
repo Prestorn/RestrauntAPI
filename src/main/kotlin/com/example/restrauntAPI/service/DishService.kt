@@ -1,13 +1,15 @@
 package com.example.restrauntAPI.service
 
 import com.example.restrauntAPI.model.Dish
+import com.example.restrauntAPI.repository.DishInOrderRepository
 import com.example.restrauntAPI.repository.DishRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.Optional
 
 @Service
-class DishService(val dishRepository: DishRepository) {
+class DishService(val dishRepository: DishRepository,
+                val dishInOrderRepository: DishInOrderRepository) {
 
     fun findAllDishes() : List<Dish> {
         return dishRepository.findAll()
@@ -59,6 +61,7 @@ class DishService(val dishRepository: DishRepository) {
             throw IllegalStateException("Блюда с ID = $id не существуте")
         }
 
+        dishInOrderRepository.deleteDishInAllOrders(id)
         dishRepository.deleteById(id)
 
         return "Блюдо с ID = $id удалено"

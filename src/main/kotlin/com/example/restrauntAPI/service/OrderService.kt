@@ -57,7 +57,6 @@ class OrderService(val orderRepository: OrderRepository,
         return orderRepository.save(order)
     }
 
-    //TODO fun changeCost
     fun changeCost(id: Int, delta: Int) : Order {
         val order: Order = findOrderById(id)
         order.cost += delta
