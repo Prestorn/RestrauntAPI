@@ -2,6 +2,7 @@ package com.example.restrauntAPI.service
 
 import com.example.restrauntAPI.model.Order
 import com.example.restrauntAPI.repository.ClientRepository
+import com.example.restrauntAPI.repository.DishInOrderRepository
 import com.example.restrauntAPI.repository.DishRepository
 import com.example.restrauntAPI.repository.OrderRepository
 import org.springframework.stereotype.Service
@@ -10,7 +11,8 @@ import java.util.Optional
 @Service
 class OrderService(val orderRepository: OrderRepository,
                    val clientRepository: ClientRepository,
-                   val dishRepository: DishRepository) {
+                   val dishRepository: DishRepository,
+                   val dishInOrderRepository: DishInOrderRepository) {
 
     fun findAllOrders() : List<Order> {
         return orderRepository.findAll()
@@ -61,9 +63,9 @@ class OrderService(val orderRepository: OrderRepository,
         return orderRepository.save(order)
     }
 
-    // TODO Каскадное удаление
     fun deleteOrder(id: Int) : String {
         findOrderById(id)
+        dishInOrderRepository.deleteAllByOrderId(id)
         orderRepository.deleteById(id)
         return "Заказ с ID: $id удалён"
     }

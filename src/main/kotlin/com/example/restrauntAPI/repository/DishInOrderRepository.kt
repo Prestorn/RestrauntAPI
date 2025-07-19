@@ -16,6 +16,11 @@ interface DishInOrderRepository: JpaRepository<DishInOrder, Int> {
 
     @Modifying
     @Transactional
-    @Query(value = "delete from dishes_in_orders where dish_id = :dishId", nativeQuery = true)
-    fun deleteDishInAllOrders(dishId: Int)
+    @Query(value = "delete from dishes_in_orders where dish_id = :id", nativeQuery = true)
+    fun deleteDishInAllOrders(id: Int)
+
+    @Modifying
+    @Transactional
+    @Query(value = "delete from dishes_in_orders where order_id = :id", nativeQuery = true)
+    fun deleteAllByOrderId(id: Int)
 }

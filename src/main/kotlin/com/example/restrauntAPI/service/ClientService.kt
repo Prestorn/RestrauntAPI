@@ -1,12 +1,17 @@
 package com.example.restrauntAPI.service
 
 import com.example.restrauntAPI.model.Client
+import com.example.restrauntAPI.model.Order
 import com.example.restrauntAPI.repository.ClientRepository
+import com.example.restrauntAPI.repository.DishInOrderRepository
+import com.example.restrauntAPI.repository.OrderRepository
 import org.springframework.stereotype.Service
 import java.util.Optional
 
 @Service
-class ClientService(val clientRepository: ClientRepository) {
+class ClientService(val clientRepository: ClientRepository,
+                    val orderRepository: OrderRepository,
+                    val dishInOrderRepository: DishInOrderRepository) {
 
     fun findAllClients() : List<Client> {
         return clientRepository.findAll()
@@ -40,9 +45,15 @@ class ClientService(val clientRepository: ClientRepository) {
         return client
     }
 
-    // TODO Каскадное удаление
     fun deleteClient(id: Int) : String {
         findClientById(id)
+
+        val ordersList: List<Order> = orderRepository.findByClientId(id)
+        for (order in ordersList) {
+            dishInOrderRepository.deleteAllByOrderId(order.id)
+            orderRepository.deleteById(order.id)
+        }
+
         clientRepository.deleteById(id)
 
         return "Клиент с ID: $id удалён"
