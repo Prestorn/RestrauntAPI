@@ -1,0 +1,20 @@
+services:
+  app:
+    build: application/
+    ports:
+      - 8080:8080
+    depends_on:
+      - database
+    container_name: restrauntAPI
+    networks:
+      - restraunt-net
+
+  database:
+    build: database/
+    container_name: restrauntDB
+    networks:
+      - restraunt-net
+
+networks:
+  restraunt-net:
+    driver: bridge

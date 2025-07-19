@@ -2,7 +2,7 @@ spring:
   application:
     name: restrauntAPI
   datasource:
-    url: jdbc:postgresql://localhost:5432/restrauntAPI
+    url: jdbc:postgresql://database:5432/restraunt_api
     username: postgres
     password: 1947
     driver-class-name: org.postgresql.Driver
